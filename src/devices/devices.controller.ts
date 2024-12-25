@@ -35,6 +35,11 @@ export class DevicesController {
     return this.devicesService.findOne(id);
   }
 
+  @Get('user/:openid')
+  findByOpenid(@Param('openid') openid: string) {
+    return this.devicesService.findByOpenid(openid);
+  }
+
   @Put(':id')
   update(@Param('id') id: string, @Body() updateDeviceDto: any) {
     return this.devicesService.update(id, updateDeviceDto);

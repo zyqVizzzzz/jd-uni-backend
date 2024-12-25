@@ -18,6 +18,26 @@ export class DevicesService {
     return this.deviceModel.find({ user_id: userId }).exec();
   }
 
+  async findByOpenid(openid: string): Promise<Device[]> {
+    return this.deviceModel
+      .aggregate([
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        {
+          $match: {
+            'user.openid': openid,
+          },
+        },
+      ])
+      .exec();
+  }
+
   async findOne(id: string): Promise<Device> {
     return this.deviceModel.findById(id).exec();
   }
