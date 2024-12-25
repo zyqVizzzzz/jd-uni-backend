@@ -6,6 +6,7 @@ import { WechatModule } from './wechat/wechat.module';
 import { AuthModule } from './auth/auth.module';
 import { SwimmingModule } from './swimming/swimming.module';
 import { CosModule } from './cos/cos.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { CosModule } from './cos/cos.module';
     WechatModule,
     SwimmingModule,
     CosModule,
+    DevicesModule,
   ],
 })
 export class AppModule {}

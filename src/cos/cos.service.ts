@@ -26,7 +26,7 @@ export class CosService {
           Body: file.buffer,
           ContentLength: file.size,
         },
-        (err: any, data: any) => {
+        (err: any) => {
           if (err) {
             reject(err);
           } else {
