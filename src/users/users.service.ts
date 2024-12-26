@@ -14,6 +14,10 @@ export class UsersService {
     return this.userModel.findOne({ openid }).exec();
   }
 
+  async findAll(): Promise<User[]> {
+    return this.userModel.find().exec();
+  }
+
   async create(userData: Partial<User>): Promise<User> {
     const user = new this.userModel(userData);
     return user.save();

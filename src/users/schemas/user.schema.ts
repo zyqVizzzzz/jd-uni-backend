@@ -1,6 +1,6 @@
 // users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export type UserDocument = User & Document;
 
@@ -9,6 +9,8 @@ export type UserDocument = User & Document;
   collection: 'users',
 })
 export class User {
+  _id: Types.ObjectId; // 显式声明 _id 字段
+
   @Prop({ required: true, unique: true })
   openid: string;
 

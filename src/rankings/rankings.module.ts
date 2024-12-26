@@ -3,10 +3,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { RankingsController } from './rankings.controller';
 import { RankingsService } from './rankings.service';
 import { Ranking, RankingSchema } from './schemas/ranking.schema';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Ranking.name, schema: RankingSchema }]),
+    UsersModule,
   ],
   controllers: [RankingsController],
   providers: [RankingsService],

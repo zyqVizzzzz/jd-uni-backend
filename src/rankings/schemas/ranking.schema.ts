@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Schema as MongooseSchema } from 'mongoose';
-import { User } from '../../users/schemas/user.schema';
+import { Document, Types } from 'mongoose';
 
 export type RankingDocument = Ranking & Document;
 
@@ -14,8 +13,8 @@ export enum RankType {
 
 @Schema({ timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 export class Ranking {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
-  user_id: User;
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  user_id: Types.ObjectId;
 
   @Prop({ required: true, enum: RankType })
   rank_type: RankType;
