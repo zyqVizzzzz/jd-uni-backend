@@ -7,12 +7,16 @@ import {
   SwimmingRecord,
   SwimmingRecordSchema,
 } from './schemas/swimming-record.schema';
+import { RankingsModule } from '../rankings/rankings.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: SwimmingRecord.name, schema: SwimmingRecordSchema },
     ]),
+    RankingsModule,
+    UsersModule,
   ],
   controllers: [SwimmingController],
   providers: [SwimmingService],

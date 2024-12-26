@@ -6,33 +6,37 @@ import {
   SwimmingRecord,
   SwimmingRecordDocument,
 } from './schemas/swimming-record.schema';
+import { UsersService } from '../users/users.service';
+import { RankingsService } from '../rankings/rankings.service';
+import { RankType } from '../rankings/schemas/ranking.schema';
 
 @Injectable()
 export class SwimmingService {
   constructor(
     @InjectModel(SwimmingRecord.name)
     private swimmingRecordModel: Model<SwimmingRecordDocument>,
+    private rankingsService: RankingsService,
+    private usersService: UsersService,
   ) {}
 
   async generateMockRecord(openid: string) {
     try {
-      // 生成随机的游泳数据
       const mockData = {
         openid,
-        date: new Date(), // 当前时间
-        distance: this.getRandomNumber(500, 2000), // 随机距离：500-2000米
-        duration: this.getRandomNumber(15, 60), // 随机时长：15-60分钟
-        strokes: this.getRandomNumber(200, 800), // 随机划水次数：200-800次
-        calories: this.getRandomNumber(200, 600), // 随机卡路里：200-600卡
-        poolLength: 50, // 标准泳池长度
+        date: new Date(),
+        distance: this.getRandomNumber(500, 2000),
+        duration: this.getRandomNumber(15, 60),
+        strokes: this.getRandomNumber(200, 800),
+        calories: this.getRandomNumber(200, 600),
+        poolLength: 50,
       };
-
-      console.log('Attempting to save mock data:', mockData);
 
       const record = new this.swimmingRecordModel(mockData);
       const savedRecord = await record.save();
 
-      console.log('Successfully saved record:', savedRecord);
+      // 更新排行榜
+      await this.updateRankings(openid, mockData.distance);
+
       return savedRecord;
     } catch (error) {
       console.error('Error generating mock record:', error);
@@ -49,7 +53,11 @@ export class SwimmingService {
       openid,
       ...recordData,
     });
-    return record.save();
+    const savedRecord = await record.save();
+
+    // 更新排行榜
+    await this.updateRankings(openid, recordData.distance);
+    return savedRecord;
   }
 
   async getLatestRecord(openid: string) {
@@ -478,5 +486,44 @@ export class SwimmingService {
         String(date.getDate()).padStart(2, '0')
       );
     });
+  }
+
+  private async updateRankings(openid: string, distance: number) {
+    try {
+      const user = await this.usersService.findOne(openid);
+
+      // 更新不同时间维度的排行榜
+      const rankingUpdates = [
+        this.updateRankingForType(openid, RankType.DAILY, distance, user),
+        this.updateRankingForType(openid, RankType.WEEKLY, distance, user),
+        this.updateRankingForType(openid, RankType.MONTHLY, distance, user),
+        this.updateRankingForType(openid, RankType.YEARLY, distance, user),
+        this.updateRankingForType(openid, RankType.TOTAL, distance, user),
+      ];
+
+      await Promise.all(rankingUpdates);
+    } catch (error) {
+      console.error('Error updating rankings:', error);
+      throw error;
+    }
+  }
+
+  private async updateRankingForType(
+    openid: string,
+    rankType: RankType,
+    distance: number,
+    user: any,
+  ) {
+    await this.rankingsService.updateUserStats(
+      user._id,
+      rankType,
+      distance,
+      true,
+      {
+        province: user.province,
+        city: user.city,
+      },
+    );
+    await this.rankingsService.updateAllRanks(rankType);
   }
 }

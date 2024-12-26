@@ -46,10 +46,14 @@ export class RankingsService {
     rankType: RankType,
     distance: number,
     incrementSwimCount: boolean = true,
+    region?: { province: string; city: string },
   ): Promise<Ranking> {
     const updateData: any = {
       $inc: {
         total_distance: distance,
+      },
+      $setOnInsert: {
+        region: region || { province: '', city: '' },
       },
     };
 
