@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { UsersService } from '../users/users.service';
+
 import { Ranking, RankingDocument, RankType } from './schemas/ranking.schema';
 
 @Injectable()
 export class RankingsService {
   constructor(
     @InjectModel(Ranking.name) private rankingModel: Model<RankingDocument>,
+    private readonly usersService: UsersService,
   ) {}
 
   async create(createRankingDto: Partial<Ranking>): Promise<Ranking> {
@@ -26,10 +29,15 @@ export class RankingsService {
     userId: string,
     rankType: RankType,
   ): Promise<Ranking | null> {
+    console.log(userId);
     return this.rankingModel
-      .findOne({ user_id: userId, rank_type: rankType })
+      .findOne({ user_id: new Types.ObjectId(userId), rank_type: rankType })
       .populate('user_id', 'nickname avatarUrl')
       .exec();
+  }
+
+  async getCitiesWithUserCount() {
+    return this.usersService.getCitiesWithUserCount();
   }
 
   async updateRanking(

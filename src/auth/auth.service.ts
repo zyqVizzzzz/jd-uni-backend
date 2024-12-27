@@ -31,7 +31,7 @@ export class AuthService {
     const payload = {
       openid: userData.openid,
       sub: userData.openid,
-      userId: userData.user._id,
+      userId: userData.user._id.toString(),
     };
 
     return {

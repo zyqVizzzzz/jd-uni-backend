@@ -23,6 +23,7 @@ export class RankingsController {
 
   @Get('me')
   getMyRanking(@CurrentUser() user, @Query('type') rankType: RankType) {
+    console.log(user);
     return this.rankingsService.findByUser(user.userId, rankType);
   }
 
@@ -116,5 +117,11 @@ export class RankingsController {
         error: error.message,
       };
     }
+  }
+
+  @Get('cities')
+  async getCitiesRanking() {
+    const data = await this.rankingsService.getCitiesWithUserCount();
+    return data;
   }
 }

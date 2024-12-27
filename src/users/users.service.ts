@@ -90,4 +90,32 @@ export class UsersService {
       .findOneAndUpdate({ openid }, { $inc: update }, { new: true })
       .exec();
   }
+
+  async getCitiesWithUserCount() {
+    return this.userModel
+      .aggregate([
+        {
+          $match: {
+            city: { $exists: true, $ne: '' },
+          },
+        },
+        {
+          $group: {
+            _id: '$city',
+            userCount: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            city: '$_id',
+            userCount: 1,
+          },
+        },
+        {
+          $sort: { userCount: -1 },
+        },
+      ])
+      .exec();
+  }
 }
