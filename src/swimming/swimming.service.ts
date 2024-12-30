@@ -522,6 +522,7 @@ export class SwimmingService {
       {
         province: user.province,
         city: user.city,
+        cityCode: user.cityCode,
       },
     );
     await this.rankingsService.updateAllRanks(rankType);

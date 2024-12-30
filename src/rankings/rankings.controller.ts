@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RankType } from './schemas/ranking.schema';
 import { UsersService } from 'src/users/users.service';
+import { DeleteResult } from 'mongoose';
 
 @Controller('rankings')
 @UseGuards(JwtAuthGuard)
@@ -30,10 +31,16 @@ export class RankingsController {
   @Get('region')
   getRegionalRankings(
     @Query('type') rankType: RankType,
-    @Query('province') province: string,
-    @Query('city') city?: string,
+    @Query('city') city: string,
+    @Query('cityCode') cityCode?: string,
   ) {
-    return this.rankingsService.getRegionalRankings(rankType, province, city);
+    const decodedCity = decodeURIComponent(city);
+    console.log(decodedCity);
+    return this.rankingsService.getRegionalRankings(
+      rankType,
+      decodedCity,
+      cityCode,
+    );
   }
 
   @Post('sync')
@@ -95,6 +102,7 @@ export class RankingsController {
             region: {
               province: user.province || '',
               city: user.city || '',
+              cityCode: user.cityCode || '',
             },
           });
         }
@@ -123,5 +131,10 @@ export class RankingsController {
   async getCitiesRanking() {
     const data = await this.rankingsService.getCitiesWithUserCount();
     return data;
+  }
+
+  @Post('delete-all')
+  async deleteAllRankings(): Promise<DeleteResult> {
+    return await this.rankingsService.deleteAll();
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { Model, Types, DeleteResult } from 'mongoose';
 import { UsersService } from '../users/users.service';
 
 import { Ranking, RankingDocument, RankType } from './schemas/ranking.schema';
@@ -29,7 +29,6 @@ export class RankingsService {
     userId: string,
     rankType: RankType,
   ): Promise<Ranking | null> {
-    console.log(userId);
     return this.rankingModel
       .findOne({ user_id: new Types.ObjectId(userId), rank_type: rankType })
       .populate('user_id', 'nickname avatarUrl')
@@ -54,14 +53,14 @@ export class RankingsService {
     rankType: RankType,
     distance: number,
     incrementSwimCount: boolean = true,
-    region?: { province: string; city: string },
+    region?: { province: string; city: string; cityCode: string },
   ): Promise<Ranking> {
     const updateData: any = {
       $inc: {
         total_distance: distance,
       },
       $setOnInsert: {
-        region: region || { province: '', city: '' },
+        region: region || { province: '', city: '', cityCode: '' },
       },
     };
 
@@ -109,16 +108,20 @@ export class RankingsService {
 
   async getRegionalRankings(
     rankType: RankType,
-    province: string,
-    city?: string,
+    city: string,
+    cityCode?: string,
   ): Promise<Ranking[]> {
     const query: any = {
       rank_type: rankType,
-      'region.province': province,
     };
 
-    if (city) {
-      query['region.city'] = city;
+    if (cityCode) {
+      // 优先使用 cityCode 查询
+      query['region.cityCode'] = cityCode;
+    } else {
+      // 后备方案：使用城市名称查询
+      const baseCity = city.replace(/市$/, '');
+      query['region.city'] = `${baseCity}市`;
     }
 
     return this.rankingModel
@@ -126,5 +129,10 @@ export class RankingsService {
       .sort({ rank: 1 })
       .populate('user_id', 'nickname avatarUrl')
       .exec();
+  }
+
+  // 删除所有数据
+  async deleteAll(): Promise<DeleteResult> {
+    return await this.rankingModel.deleteMany({});
   }
 }

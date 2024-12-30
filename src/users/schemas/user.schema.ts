@@ -30,10 +30,19 @@ export class User {
   province?: string;
 
   @Prop()
+  provinceCode?: string; // 省级行政区划代码
+
+  @Prop()
   city?: string;
 
   @Prop()
+  cityCode?: string; // 市级行政区划代码
+
+  @Prop()
   district?: string;
+
+  @Prop()
+  districtCode?: string; // 区级行政区划代码
 
   @Prop()
   phone?: string;

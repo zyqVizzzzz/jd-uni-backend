@@ -97,18 +97,22 @@ export class UsersService {
         {
           $match: {
             city: { $exists: true, $ne: '' },
+            cityCode: { $exists: true, $ne: '' }, // 确保有cityCode
           },
         },
         {
           $group: {
-            _id: '$city',
+            _id: '$cityCode', // 使用cityCode作为分组依据
+            city: { $first: '$city' }, // 保留城市名称
+            cityCode: { $first: '$cityCode' }, // 保留城市代码
             userCount: { $sum: 1 },
           },
         },
         {
           $project: {
             _id: 0,
-            city: '$_id',
+            city: 1,
+            cityCode: 1,
             userCount: 1,
           },
         },

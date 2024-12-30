@@ -32,6 +32,7 @@ export class Ranking {
   region: {
     province: string;
     city: string;
+    cityCode: string;
   };
 
   @Prop()
