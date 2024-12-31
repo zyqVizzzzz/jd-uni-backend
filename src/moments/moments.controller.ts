@@ -10,7 +10,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  UploadedFiles,
+  UploadedFile,
 } from '@nestjs/common';
 import { MomentsService } from './moments.service';
 import { CreateMomentDto } from './dto/create-moment.dto';
@@ -18,7 +18,7 @@ import { UpdateMomentDto } from './dto/update-moment.dto';
 import { QueryMomentDto } from './dto/query-moment.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CosService } from '../cos/cos.service';
 
 @Controller('moments')
@@ -30,13 +30,13 @@ export class MomentsController {
   ) {}
 
   @Post('upload')
-  @UseInterceptors(FilesInterceptor('images', 9)) // 最多允许上传9张图片
-  async uploadImages(@UploadedFiles() files: Array<Express.Multer.File>) {
-    const uploadPromises = files.map((file) =>
-      this.cosService.uploadFile(file),
-    );
-    const imageUrls = await Promise.all(uploadPromises);
-    return { imageUrls };
+  @UseInterceptors(FileInterceptor('images')) // 改为单张图片上传
+  async uploadImages(@UploadedFile() file: Express.Multer.File) {
+    console.log('接收到的文件:', file);
+    const imageUrl = await this.cosService.uploadFile(file);
+    return {
+      imageUrls: [imageUrl], // 保持返回数组格式，便于前端处理
+    };
   }
 
   @Post()

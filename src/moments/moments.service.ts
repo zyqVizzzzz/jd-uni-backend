@@ -61,6 +61,22 @@ export class MomentsService {
     };
   }
 
+  async incrementCommentCount(id: string, increment: number) {
+    return this.momentModel
+      .findByIdAndUpdate(
+        id,
+        { $inc: { commentCount: increment } },
+        { new: true },
+      )
+      .exec();
+  }
+
+  async incrementLikeCount(id: string, increment: number) {
+    return this.momentModel
+      .findByIdAndUpdate(id, { $inc: { likeCount: increment } }, { new: true })
+      .exec();
+  }
+
   async findOne(id: string): Promise<Moment> {
     const moment = await this.momentModel
       .findById(id)
