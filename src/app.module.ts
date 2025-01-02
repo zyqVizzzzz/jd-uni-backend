@@ -9,6 +9,7 @@ import { CosModule } from './cos/cos.module';
 import { DevicesModule } from './devices/devices.module';
 import { RankingsModule } from './rankings/rankings.module';
 import { MomentsModule } from './moments/moments.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { MomentsModule } from './moments/moments.module';
     DevicesModule,
     RankingsModule,
     MomentsModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}
