@@ -126,6 +126,37 @@ export class MomentsService {
       .exec();
   }
 
+  async toggleLike(
+    momentId: string,
+    userId: string,
+  ): Promise<{ liked: boolean }> {
+    const moment = await this.momentModel.findById(momentId);
+
+    if (!moment || moment.isDeleted) {
+      throw new NotFoundException('Moment not found');
+    }
+
+    // 检查用户是否已经点赞
+    const userObjectId = new Types.ObjectId(userId);
+    const hasLiked = moment.likedBy.includes(userObjectId);
+
+    if (hasLiked) {
+      // 如果已经点赞，则取消点赞
+      await this.momentModel.findByIdAndUpdate(momentId, {
+        $pull: { likedBy: userObjectId },
+        $inc: { likeCount: -1 },
+      });
+      return { liked: false };
+    } else {
+      // 如果未点赞，则添加点赞
+      await this.momentModel.findByIdAndUpdate(momentId, {
+        $addToSet: { likedBy: userObjectId },
+        $inc: { likeCount: 1 },
+      });
+      return { liked: true };
+    }
+  }
+
   async findNearby(
     coordinates: [number, number],
     maxDistance: number = 5000,

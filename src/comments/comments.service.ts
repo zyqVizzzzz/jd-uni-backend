@@ -61,7 +61,13 @@ export class CommentsService {
         isDeleted: false,
       })
       .populate('author', 'nickname avatarUrl')
-      .populate('parentComment')
+      .populate({
+        path: 'parentComment',
+        populate: {
+          path: 'author',
+          select: 'nickname avatarUrl',
+        },
+      })
       .sort({ createdAt: -1 })
       .exec();
   }

@@ -77,6 +77,11 @@ export class MomentsController {
     return this.momentsService.update(id, user.userId, updateMomentDto);
   }
 
+  @Post(':id/like')
+  async toggleLike(@Param('id') id: string, @CurrentUser() user) {
+    return this.momentsService.toggleLike(id, user.userId);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string, @CurrentUser() user) {
     return this.momentsService.remove(id, user.userId);
