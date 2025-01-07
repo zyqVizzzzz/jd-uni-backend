@@ -21,7 +21,7 @@ export class Device {
   @Prop()
   last_sync: Date;
 
-  @Prop({ required: true })
+  @Prop({ default: "zh" })
   language: string;
 
   @Prop()

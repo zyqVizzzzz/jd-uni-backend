@@ -32,4 +32,12 @@ export class AuthController {
   getProfile(@Request() req) {
     return req.user;
   }
+
+  @Get('test')
+  async test() {
+    return {
+      message: 'Auth service is working',
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
