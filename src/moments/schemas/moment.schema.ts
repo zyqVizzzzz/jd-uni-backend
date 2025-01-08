@@ -1,4 +1,3 @@
-// src/moments/schemas/moment.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../../users/schemas/user.schema';
@@ -15,8 +14,8 @@ export class Moment {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   author: Types.ObjectId | User;
 
-  @Prop({ required: true })
-  content: string;
+  @Prop()
+  content?: string;
 
   @Prop({ type: [String], default: [] })
   images: string[];
@@ -33,11 +32,9 @@ export class Moment {
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   likedBy: Types.ObjectId[];
 
-  // 隐私设置
   @Prop({ default: 'public', enum: ['public', 'friends', 'private'] })
   visibility: string;
 
-  // 原始数据，用于后续扩展
   @Prop({ type: Object })
   metadata?: Record<string, any>;
 }
@@ -47,3 +44,19 @@ export const MomentSchema = SchemaFactory.createForClass(Moment);
 // 添加复合索引以优化查询性能
 MomentSchema.index({ author: 1, createdAt: -1 });
 MomentSchema.index({ isDeleted: 1, createdAt: -1 });
+
+// 添加自定义验证器确保 content 和 images 不能同时为空
+MomentSchema.pre('validate', function (next) {
+  const moment = this as MomentDocument;
+  const hasContent =
+    moment.content !== undefined &&
+    moment.content !== null &&
+    moment.content.trim() !== '';
+  const hasImages = moment.images && moment.images.length > 0;
+
+  if (!hasContent && !hasImages) {
+    next(new Error('Moment must have either content or images'));
+  } else {
+    next();
+  }
+});

@@ -76,6 +76,9 @@ export class User {
 
   @Prop({ type: Number })
   height?: number;
+
+  @Prop()
+  target?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
