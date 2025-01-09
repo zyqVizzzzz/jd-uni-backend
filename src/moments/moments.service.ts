@@ -7,6 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Moment, MomentDocument } from './schemas/moment.schema';
+import { UserRelationsService } from '../user-relations/user-relations.service';
 import { CreateMomentDto } from './dto/create-moment.dto';
 import { UpdateMomentDto } from './dto/update-moment.dto';
 import { QueryMomentDto, MomentType } from './dto/query-moment.dto';
@@ -15,6 +16,7 @@ import { QueryMomentDto, MomentType } from './dto/query-moment.dto';
 export class MomentsService {
   constructor(
     @InjectModel(Moment.name) private momentModel: Model<MomentDocument>,
+    private userRelationsService: UserRelationsService,
   ) {}
 
   async create(
@@ -32,6 +34,8 @@ export class MomentsService {
     const { page = 1, limit = 20, type = MomentType.ALL, city } = query;
     const skip = (page - 1) * limit;
 
+    const baseQuery: any = { isDeleted: false };
+
     // 如果是 FOLLOWING 类型，直接返回空结果
     if (type === MomentType.FOLLOWING) {
       return {
@@ -42,8 +46,6 @@ export class MomentsService {
         totalPages: 0,
       };
     }
-
-    const baseQuery: any = { isDeleted: false };
 
     // 根据不同类型构建查询条件
     switch (type) {
@@ -73,9 +75,33 @@ export class MomentsService {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
+        .lean()
         .exec(),
       this.momentModel.countDocuments(baseQuery),
     ]);
+
+    // 如果是已登录用户，为每个动态作者添加关注状态
+    // 处理关注状态并转换结果格式
+    const processedItems = await Promise.all(
+      moments.map(async (moment: any) => {
+        const isFollowing = currentUserId
+          ? await this.userRelationsService.isFollowing(
+              new Types.ObjectId(currentUserId),
+              moment.author._id,
+            )
+          : false;
+
+        return {
+          ...moment,
+          author: {
+            _id: moment.author._id,
+            nickname: moment.author.nickname,
+            avatarUrl: moment.author.avatarUrl,
+            isFollowing,
+          },
+        };
+      }),
+    );
 
     // 如果是已登录用户，添加是否点赞的标记
     // let processedMoments = moments;
@@ -90,7 +116,7 @@ export class MomentsService {
     // }
 
     return {
-      items: moments,
+      items: processedItems,
       total,
       page,
       limit,

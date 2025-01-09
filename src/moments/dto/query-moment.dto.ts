@@ -1,5 +1,5 @@
 // src/moments/dto/query-moment.dto.ts
-import { IsEnum, IsOptional, IsNumber, Min, IsString } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 
 export enum MomentType {
   ALL = 'all',

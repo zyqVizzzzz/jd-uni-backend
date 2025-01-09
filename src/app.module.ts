@@ -10,6 +10,7 @@ import { DevicesModule } from './devices/devices.module';
 import { RankingsModule } from './rankings/rankings.module';
 import { MomentsModule } from './moments/moments.module';
 import { CommentsModule } from './comments/comments.module';
+import { UserRelationsModule } from './user-relations/user-relations.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CommentsModule } from './comments/comments.module';
     RankingsModule,
     MomentsModule,
     CommentsModule,
+    UserRelationsModule,
   ],
 })
 export class AppModule {}
