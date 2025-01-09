@@ -9,7 +9,7 @@ import { Model, Types } from 'mongoose';
 import { Moment, MomentDocument } from './schemas/moment.schema';
 import { CreateMomentDto } from './dto/create-moment.dto';
 import { UpdateMomentDto } from './dto/update-moment.dto';
-import { QueryMomentDto } from './dto/query-moment.dto';
+import { QueryMomentDto, MomentType } from './dto/query-moment.dto';
 
 @Injectable()
 export class MomentsService {
@@ -28,29 +28,66 @@ export class MomentsService {
     return moment.save();
   }
 
-  async findAll(query: QueryMomentDto) {
-    const { page = 1, limit = 20, type, userId, city } = query;
+  async findAll(query: QueryMomentDto, currentUserId?: string) {
+    const { page = 1, limit = 20, type = MomentType.ALL, city } = query;
     const skip = (page - 1) * limit;
+
+    // 如果是 FOLLOWING 类型，直接返回空结果
+    if (type === MomentType.FOLLOWING) {
+      return {
+        items: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0,
+      };
+    }
 
     const baseQuery: any = { isDeleted: false };
 
-    // 根据查询类型构建不同的查询条件
-    if (userId) {
-      baseQuery.author = new Types.ObjectId(userId);
-    }
-    if (city) {
-      baseQuery['location.city'] = city;
+    // 根据不同类型构建查询条件
+    switch (type) {
+      case MomentType.MY:
+        if (!currentUserId) {
+          throw new ForbiddenException(
+            'User must be logged in to view personal feed',
+          );
+        }
+        baseQuery.author = new Types.ObjectId(currentUserId);
+        break;
+
+      case MomentType.ALL:
+      default:
+        // 如果指定了城市，添加城市筛选
+        if (city) {
+          baseQuery['location.city'] = city;
+        }
+        break;
     }
 
-    const moments = await this.momentModel
-      .find(baseQuery)
-      .populate('author', 'nickname avatarUrl')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .exec();
+    // 执行查询
+    const [moments, total] = await Promise.all([
+      this.momentModel
+        .find(baseQuery)
+        .populate('author', 'nickname avatarUrl')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.momentModel.countDocuments(baseQuery),
+    ]);
 
-    const total = await this.momentModel.countDocuments(baseQuery);
+    // 如果是已登录用户，添加是否点赞的标记
+    // let processedMoments = moments;
+    // if (currentUserId) {
+    //   processedMoments = moments.map((moment) => {
+    //     const momentObj = moment.toObject();
+    //     momentObj.isLiked = moment.likedBy?.includes(
+    //       new Types.ObjectId(currentUserId),
+    //     );
+    //     return momentObj;
+    //   });
+    // }
 
     return {
       items: moments,
@@ -60,6 +97,39 @@ export class MomentsService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  // async findAll(query: QueryMomentDto) {
+  //   const { page = 1, limit = 20, type, userId, city } = query;
+  //   const skip = (page - 1) * limit;
+
+  //   const baseQuery: any = { isDeleted: false };
+
+  //   // 根据查询类型构建不同的查询条件
+  //   if (userId) {
+  //     baseQuery.author = new Types.ObjectId(userId);
+  //   }
+  //   if (city) {
+  //     baseQuery['location.city'] = city;
+  //   }
+
+  //   const moments = await this.momentModel
+  //     .find(baseQuery)
+  //     .populate('author', 'nickname avatarUrl')
+  //     .sort({ createdAt: -1 })
+  //     .skip(skip)
+  //     .limit(limit)
+  //     .exec();
+
+  //   const total = await this.momentModel.countDocuments(baseQuery);
+
+  //   return {
+  //     items: moments,
+  //     total,
+  //     page,
+  //     limit,
+  //     totalPages: Math.ceil(total / limit),
+  //   };
+  // }
 
   async incrementCommentCount(id: string, increment: number) {
     return this.momentModel

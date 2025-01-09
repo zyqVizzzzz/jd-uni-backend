@@ -45,8 +45,9 @@ export class MomentsController {
   }
 
   @Get()
-  findAll(@Query() query: QueryMomentDto) {
-    return this.momentsService.findAll(query);
+  findAll(@Query() query: QueryMomentDto, @CurrentUser() user) {
+    console.log(query);
+    return this.momentsService.findAll(query, user?.userId);
   }
 
   @Get('nearby')
