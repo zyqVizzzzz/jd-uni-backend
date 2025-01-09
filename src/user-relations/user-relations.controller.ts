@@ -33,15 +33,15 @@ export class UserRelationsController {
     @Param('userId') targetUserId: string,
   ) {
     // 检查目标用户是否存在
-    const targetUser = await this.usersService.findOne(targetUserId);
+    const targetUser = await this.usersService.findById(targetUserId);
     if (!targetUser) {
       throw new NotFoundException('Target user not found');
     }
 
     // 检查是否是自己
-    if (currentUser.openid === targetUserId) {
-      throw new ConflictException('Cannot follow yourself');
-    }
+    // if (currentUser.openid === targetUserId) {
+    //   throw new ConflictException('Cannot follow yourself');
+    // }
 
     // 检查是否已经被对方拉黑
     const isBlocked = await this.userRelationsService.isBlocked(
@@ -72,7 +72,7 @@ export class UserRelationsController {
     @CurrentUser() currentUser,
     @Param('userId') targetUserId: string,
   ) {
-    const targetUser = await this.usersService.findOne(targetUserId);
+    const targetUser = await this.usersService.findById(targetUserId);
     if (!targetUser) {
       throw new NotFoundException('Target user not found');
     }

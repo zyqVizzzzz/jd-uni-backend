@@ -14,6 +14,15 @@ export class UsersService {
     return this.userModel.findOne({ openid }).exec();
   }
 
+  async findById(id: string): Promise<User | null> {
+    try {
+      return this.userModel.findById(id).exec();
+    } catch (error) {
+      // Handle invalid ObjectId format
+      return null;
+    }
+  }
+
   async findAll(): Promise<User[]> {
     return this.userModel.find().exec();
   }
