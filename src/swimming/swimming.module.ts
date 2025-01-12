@@ -8,6 +8,7 @@ import {
   SwimmingRecordSchema,
 } from './schemas/swimming-record.schema';
 import { RankingsModule } from '../rankings/rankings.module';
+import { PointsModule } from '../points/points.module';
 import { UsersModule } from '../users/users.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { UsersModule } from '../users/users.module';
     ]),
     RankingsModule,
     UsersModule,
+    PointsModule,
   ],
   controllers: [SwimmingController],
   providers: [SwimmingService],

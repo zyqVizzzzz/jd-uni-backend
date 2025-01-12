@@ -8,7 +8,9 @@ import {
 } from './schemas/swimming-record.schema';
 import { UsersService } from '../users/users.service';
 import { RankingsService } from '../rankings/rankings.service';
+import { PointsService } from '../points/points.service';
 import { RankType } from '../rankings/schemas/ranking.schema';
+import { TaskType } from '../points/types/task-status.type'; // 添加这行导入
 
 @Injectable()
 export class SwimmingService {
@@ -17,17 +19,19 @@ export class SwimmingService {
     private swimmingRecordModel: Model<SwimmingRecordDocument>,
     private rankingsService: RankingsService,
     private usersService: UsersService,
+    private readonly pointsService: PointsService, // 注入 PointsService
   ) {}
 
-  async generateMockRecord(openid: string) {
+  async generateMockRecord(userId: string, openid: string) {
+    console.log(userId);
     try {
       const mockData = {
         openid,
         date: new Date(),
-        distance: this.getRandomNumber(500, 2000),
+        distance: this.getRandomNumber(100, 1000),
         duration: this.getRandomNumber(15, 60),
         strokes: this.getRandomNumber(200, 800),
-        calories: this.getRandomNumber(200, 600),
+        calories: this.getRandomNumber(100, 1000),
         poolLength: 50,
       };
 
@@ -36,6 +40,28 @@ export class SwimmingService {
 
       // 更新排行榜
       await this.updateRankings(openid, mockData.distance);
+
+      // 获取今日总距离
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayRecords = await this.swimmingRecordModel.find({
+        openid,
+        date: {
+          $gte: today,
+          $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+        },
+      });
+      const totalDistance = todayRecords.reduce(
+        (sum, record) => sum + record.distance,
+        0,
+      );
+
+      if (totalDistance >= 1000) {
+        await this.pointsService.completeTask(userId, TaskType.SWIM_1000M);
+        await this.pointsService.completeTask(userId, TaskType.SWIM_500M);
+      } else if (totalDistance >= 500) {
+        await this.pointsService.completeTask(userId, TaskType.SWIM_500M);
+      }
 
       return savedRecord;
     } catch (error) {

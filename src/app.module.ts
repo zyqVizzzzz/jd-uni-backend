@@ -11,6 +11,7 @@ import { RankingsModule } from './rankings/rankings.module';
 import { MomentsModule } from './moments/moments.module';
 import { CommentsModule } from './comments/comments.module';
 import { UserRelationsModule } from './user-relations/user-relations.module';
+import { PointsModule } from './points/points.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UserRelationsModule } from './user-relations/user-relations.module';
     MomentsModule,
     CommentsModule,
     UserRelationsModule,
+    PointsModule,
   ],
 })
 export class AppModule {}

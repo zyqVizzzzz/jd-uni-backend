@@ -11,7 +11,7 @@ export class SwimmingController {
   @Post('generate-mock')
   async generateMockRecord(@CurrentUser() user) {
     console.log(user);
-    return this.swimmingService.generateMockRecord(user.openid);
+    return this.swimmingService.generateMockRecord(user.userId, user.openid);
   }
 
   @Post('records')
