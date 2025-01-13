@@ -52,28 +52,42 @@ export class RankingsService {
     userId: string,
     rankType: RankType,
     distance: number,
-    incrementSwimCount: boolean = true,
+    incrementCount: boolean,
     region?: { province: string; city: string; cityCode: string },
-  ): Promise<Ranking> {
-    const updateData: any = {
+  ) {
+    // 使用 findOneAndUpdate 而不是创建新记录
+    const update: any = {
       $inc: {
         total_distance: distance,
       },
-      $setOnInsert: {
-        region: region || { province: '', city: '', cityCode: '' },
-      },
     };
 
-    if (incrementSwimCount) {
-      updateData.$inc.swim_count = 1;
+    if (incrementCount) {
+      update.$inc.swim_count = 1;
     }
 
-    return this.rankingModel
-      .findOneAndUpdate({ user_id: userId, rank_type: rankType }, updateData, {
-        new: true,
+    if (region) {
+      update.$set = {
+        region: {
+          province: region.province || '',
+          city: region.city || '',
+          cityCode: region.cityCode || '',
+        },
+      };
+    }
+
+    // 使用 upsert 选项，如果记录不存在则创建，存在则更新
+    return await this.rankingModel.findOneAndUpdate(
+      {
+        user_id: userId,
+        rank_type: rankType,
+      },
+      update,
+      {
         upsert: true,
-      })
-      .exec();
+        new: true,
+      },
+    );
   }
 
   async updateAllRanks(rankType: RankType): Promise<void> {
