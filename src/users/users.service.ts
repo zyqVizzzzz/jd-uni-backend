@@ -28,20 +28,45 @@ export class UsersService {
   }
 
   async create(userData: Partial<User>): Promise<User> {
-    const user = new this.userModel(userData);
+    const user = new this.userModel({
+      ...userData,
+      lastLoginAt: new Date(),
+    });
     return user.save();
   }
 
-  async findOneAndUpdate(
-    openid: string,
-    updateData: Partial<User>,
-  ): Promise<User | null> {
-    return this.userModel
-      .findOneAndUpdate(
+  async findOneAndUpdate(openid: string, updateData: any, isLogin = false) {
+    console.log(openid);
+    let user = await this.userModel.findOne({ openid });
+
+    if (!user) {
+      // 只在首次创建用户时设置默认信息
+      user = await this.userModel.create({
+        openid,
+        nickname: '未设置昵称',
+        avatarUrl: '/static/avatar.jpg',
+        ...updateData,
+      });
+    } else if (isLogin) {
+      // 如果是登录操作，只更新登录时间
+      user = await this.userModel.findOneAndUpdate(
         { openid },
-        { ...updateData, lastLoginAt: new Date() },
-        { new: true, upsert: true },
-      )
+        { lastLoginAt: updateData.lastLoginAt },
+        { new: true },
+      );
+    } else {
+      // 其他更新操作（如更新用户信息）
+      user = await this.userModel.findOneAndUpdate({ openid }, updateData, {
+        new: true,
+      });
+    }
+
+    return user;
+  }
+
+  async updateLoginTime(openid: string): Promise<User | null> {
+    return this.userModel
+      .findOneAndUpdate({ openid }, { lastLoginAt: new Date() }, { new: true })
       .exec();
   }
 

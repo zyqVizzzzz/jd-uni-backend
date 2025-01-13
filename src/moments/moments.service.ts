@@ -11,23 +11,37 @@ import { UserRelationsService } from '../user-relations/user-relations.service';
 import { CreateMomentDto } from './dto/create-moment.dto';
 import { UpdateMomentDto } from './dto/update-moment.dto';
 import { QueryMomentDto, MomentType } from './dto/query-moment.dto';
+import { PointsService } from '../points/points.service';
+import { TaskType } from '../points/types/task-status.type';
 
 @Injectable()
 export class MomentsService {
   constructor(
     @InjectModel(Moment.name) private momentModel: Model<MomentDocument>,
     private userRelationsService: UserRelationsService,
+    private readonly pointsService: PointsService, // 注入 PointsService
   ) {}
 
   async create(
     userId: string,
     createMomentDto: CreateMomentDto,
   ): Promise<Moment> {
-    const moment = new this.momentModel({
-      author: new Types.ObjectId(userId),
-      ...createMomentDto,
-    });
-    return moment.save();
+    try {
+      // 先创建并保存动态
+      const moment = await this.momentModel.create({
+        author: new Types.ObjectId(userId),
+        ...createMomentDto,
+      });
+
+      // 完成发布动态任务并添加积分
+      await this.pointsService.completeTask(userId, TaskType.POST_STATUS);
+
+      // 返回创建的动态
+      return moment;
+    } catch (error) {
+      console.error('Error creating moment:', error);
+      throw error;
+    }
   }
 
   async findAll(query: QueryMomentDto, currentUserId?: string) {

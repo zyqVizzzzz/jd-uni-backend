@@ -19,12 +19,22 @@ export class PointsService {
     private dailyTaskModel: Model<DailyTaskDocument>,
   ) {}
 
-  async getUserPoints(userId: string): Promise<Points> {
-    let userPoints = await this.pointsModel.findOne({ userId });
+  async getUserPoints(userId: string) {
+    // 获取用户积分记录
+    const userPoints = await this.pointsModel.findOne({ userId });
+
     if (!userPoints) {
-      userPoints = await this.pointsModel.create({ userId });
+      // 如果用户没有积分记录，返回默认值
+      return {
+        totalPoints: 0,
+        dailyTasks: [],
+      };
     }
-    return userPoints;
+
+    return {
+      totalPoints: userPoints.totalPoints || 0,
+      dailyTasks: userPoints.dailyTasks || [],
+    };
   }
 
   async addPoints(userId: string, type: TaskType) {

@@ -15,10 +15,23 @@ export class AuthService {
   async validateWechatUser(code: string) {
     const wxSession = await this.wechatService.code2Session(code);
 
-    // 查找或创建用户
-    const user = await this.usersService.findOneAndUpdate(wxSession.openid, {
-      lastLoginAt: new Date(),
-    });
+    // 先查找用户是否存在
+    let user = await this.usersService.findOne(wxSession.openid);
+
+    console.log(user);
+
+    if (!user) {
+      // 只有在用户不存在时才创建新用户
+      user = await this.usersService.create({
+        openid: wxSession.openid,
+        nickname: '未设置昵称',
+        avatarUrl: '/static/avatar.jpg',
+        lastLoginAt: new Date(),
+      });
+    } else {
+      // 如果用户存在，只更新登录时间
+      user = await this.usersService.updateLoginTime(wxSession.openid);
+    }
 
     return {
       openid: wxSession.openid,

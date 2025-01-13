@@ -41,6 +41,7 @@ export class MomentsController {
 
   @Post()
   create(@CurrentUser() user, @Body() createMomentDto: CreateMomentDto) {
+    console.log(user.userId);
     return this.momentsService.create(user.userId, createMomentDto);
   }
 

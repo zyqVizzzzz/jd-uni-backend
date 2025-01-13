@@ -11,7 +11,6 @@ export class PointsController {
 
   @Get()
   async getUserPoints(@CurrentUser() user: any) {
-    console.log(user);
     return this.pointsService.getUserPoints(user.userId);
   }
 
