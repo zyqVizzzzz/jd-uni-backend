@@ -44,7 +44,7 @@ export class UsersService {
       user = await this.userModel.create({
         openid,
         nickname: '未设置昵称',
-        avatarUrl: '/static/avatar.jpg',
+        avatarUrl: '/static/avatar.png',
         ...updateData,
       });
     } else if (isLogin) {

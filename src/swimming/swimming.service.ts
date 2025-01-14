@@ -451,13 +451,53 @@ export class SwimmingService {
     };
   }
 
-  async getMonthlyTarget(openid: string, year: number, month: number) {
-    // 这里可以添加月度目标表的查询逻辑
-    return {
-      targetDistance: 2000, // 示例：目标游泳距离2000米
-      currentDistance: 200, // 当前已完成距离
-      completionRate: 0.1, // 完成率10%
-    };
+  async getMonthlyTarget(openid: string) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // 获取当前月份
+
+    try {
+      // 获取用户的目标距离
+      const user = await this.usersService.findOne(openid);
+      const targetDistance = user.target || 2000; // 默认2000米
+
+      // 计算当月的开始和结束时间
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+
+      console.log(startDate, endDate);
+      // 获取当月的游泳记录总距离
+      const monthlyStats = await this.swimmingRecordModel.aggregate([
+        {
+          $match: {
+            openid,
+            date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            currentDistance: { $sum: '$distance' },
+          },
+        },
+      ]);
+
+      const currentDistance = monthlyStats[0]?.currentDistance || 0;
+      const completionRate =
+        targetDistance > 0 ? currentDistance / targetDistance : 0;
+
+      return {
+        targetDistance,
+        currentDistance,
+        completionRate: Number(completionRate.toFixed(2)), // 保留两位小数
+      };
+    } catch (error) {
+      console.error('Error getting monthly target:', error);
+      throw error;
+    }
   }
 
   async getDateRecord(openid: string, date: string) {

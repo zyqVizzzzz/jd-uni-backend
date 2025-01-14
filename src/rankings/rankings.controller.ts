@@ -15,11 +15,12 @@ export class RankingsController {
   ) {}
 
   @Get()
-  getTopRankings(
+  async getTopRankings(
     @Query('type') rankType: RankType,
     @Query('limit') limit: number,
+    @CurrentUser() user: { userId: string },
   ) {
-    return this.rankingsService.getTopRankings(rankType, limit);
+    return this.rankingsService.getTopRankings(rankType, limit, user.userId);
   }
 
   @Get('me')

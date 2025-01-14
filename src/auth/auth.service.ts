@@ -25,7 +25,7 @@ export class AuthService {
       user = await this.usersService.create({
         openid: wxSession.openid,
         nickname: '未设置昵称',
-        avatarUrl: '/static/avatar.jpg',
+        avatarUrl: '/static/avatar.png',
         lastLoginAt: new Date(),
       });
     } else {

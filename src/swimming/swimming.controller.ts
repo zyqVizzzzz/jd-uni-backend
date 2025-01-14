@@ -98,11 +98,7 @@ export class SwimmingController {
   }
 
   @Get('monthly-target')
-  async getMonthlyTarget(
-    @CurrentUser() user,
-    @Query('year') year: number,
-    @Query('month') month: number,
-  ) {
-    return this.swimmingService.getMonthlyTarget(user.openid, year, month);
+  async getMonthlyTarget(@CurrentUser() user) {
+    return this.swimmingService.getMonthlyTarget(user.openid);
   }
 }

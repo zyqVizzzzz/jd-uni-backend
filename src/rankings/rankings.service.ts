@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, DeleteResult } from 'mongoose';
 import { UsersService } from '../users/users.service';
-
+import { UserRelationsService } from '../user-relations/user-relations.service';
 import { Ranking, RankingDocument, RankType } from './schemas/ranking.schema';
 
 @Injectable()
@@ -10,6 +10,7 @@ export class RankingsService {
   constructor(
     @InjectModel(Ranking.name) private rankingModel: Model<RankingDocument>,
     private readonly usersService: UsersService,
+    private readonly userRelationsService: UserRelationsService, // 注入 UserRelationsService
   ) {}
 
   async create(createRankingDto: Partial<Ranking>): Promise<Ranking> {
@@ -110,14 +111,32 @@ export class RankingsService {
 
   async getTopRankings(
     rankType: RankType,
-    limit: number = 10,
-  ): Promise<Ranking[]> {
-    return this.rankingModel
+    limit = 20,
+    currentUserId?: string,
+  ): Promise<any[]> {
+    const rankings = await this.rankingModel
       .find({ rank_type: rankType })
-      .sort({ rank: 1 })
+      .sort({ total_distance: -1 })
       .limit(limit)
       .populate('user_id', 'nickname avatarUrl')
-      .exec();
+      .lean();
+
+    if (currentUserId) {
+      return Promise.all(
+        rankings.map(async (ranking) => ({
+          ...ranking,
+          user_id: {
+            ...ranking.user_id,
+            isFollowing: await this.userRelationsService.isFollowing(
+              new Types.ObjectId(currentUserId),
+              new Types.ObjectId(ranking.user_id._id),
+            ),
+          },
+        })),
+      );
+    }
+
+    return rankings;
   }
 
   async getRegionalRankings(
