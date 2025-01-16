@@ -39,7 +39,23 @@ export class UsersController {
     if (!userRecord) {
       throw new NotFoundException('User not found');
     }
-    return userRecord;
+
+    // 获取实时的粉丝数和关注数
+    const [followers, following] = await Promise.all([
+      this.userRelationsService.getFollowers(
+        new Types.ObjectId(userRecord._id),
+      ),
+      this.userRelationsService.getFollowing(
+        new Types.ObjectId(userRecord._id),
+      ),
+    ]);
+
+    const userObject = JSON.parse(JSON.stringify(userRecord));
+    return {
+      ...userObject,
+      followers: followers.length,
+      following: following.length,
+    };
   }
 
   @UseGuards(JwtAuthGuard)
