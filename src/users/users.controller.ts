@@ -115,7 +115,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Get(':id/profile')
   async getUserProfile(@Param('id') id: string, @CurrentUser() currentUser) {
-    const user = await this.usersService.findOne(id);
+    console.log(id);
+    const user = await this.usersService.findById(id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -130,7 +131,7 @@ export class UsersController {
     }
 
     // 检查关系状态
-    const [isFollowing, amIBlocked] = await Promise.all([
+    const [isFollowing, amIBlocked, followers, following] = await Promise.all([
       this.userRelationsService.isFollowing(
         new Types.ObjectId(currentUser.userId),
         new Types.ObjectId(user._id),
@@ -139,11 +140,15 @@ export class UsersController {
         new Types.ObjectId(currentUser.userId),
         new Types.ObjectId(user._id),
       ),
+      this.userRelationsService.getFollowers(new Types.ObjectId(user._id)),
+      this.userRelationsService.getFollowing(new Types.ObjectId(user._id)),
     ]);
 
     const userObject = JSON.parse(JSON.stringify(user));
     return {
       ...userObject,
+      followers: followers.length,
+      following: following.length,
       isFollowing,
       isBlocked: amIBlocked,
     };
