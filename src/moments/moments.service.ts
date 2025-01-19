@@ -50,17 +50,6 @@ export class MomentsService {
 
     const baseQuery: any = { isDeleted: false };
 
-    // 如果是 FOLLOWING 类型，直接返回空结果
-    if (type === MomentType.FOLLOWING) {
-      return {
-        items: [],
-        total: 0,
-        page,
-        limit,
-        totalPages: 0,
-      };
-    }
-
     // 根据不同类型构建查询条件
     switch (type) {
       case MomentType.MY:
@@ -70,6 +59,23 @@ export class MomentsService {
           );
         }
         baseQuery.author = new Types.ObjectId(currentUserId);
+        break;
+
+      case MomentType.FOLLOWING:
+        if (!currentUserId) {
+          throw new ForbiddenException(
+            'User must be logged in to view following feed',
+          );
+        }
+        // 获取当前用户关注的用户列表
+        const followingUsers = await this.userRelationsService.getFollowing(
+          new Types.ObjectId(currentUserId),
+        );
+
+        // 将关注的用户ID添加到查询条件中
+        baseQuery.author = {
+          $in: followingUsers.map((user) => user.toUser._id),
+        };
         break;
 
       case MomentType.ALL:
