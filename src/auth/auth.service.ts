@@ -24,8 +24,6 @@ export class AuthService {
       // 只有在用户不存在时才创建新用户
       user = await this.usersService.create({
         openid: wxSession.openid,
-        nickname: '未设置昵称',
-        avatarUrl: '/static/avatar.png',
         lastLoginAt: new Date(),
       });
     } else {
